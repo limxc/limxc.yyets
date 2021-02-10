@@ -26,7 +26,7 @@ using (var conn = new SQLiteConnection($"Data Source={dbPath};"))
 	conn.Open();
 	var rst = await conn.QueryAsync("select name,data from resource");
 
-	var origin = from d in rst//.Take(10)
+	var origin = from d in rst
 				 let jd = JsonConvert.DeserializeObject<dynamic>(d.data).data
 				 //where jd.info.id.ToString() == "10053"
 				 from jdl in (JArray)jd.list
@@ -35,7 +35,7 @@ using (var conn = new SQLiteConnection($"Data Source={dbPath};"))
 				 let resolution = ((JProperty)jdli).Name
 				 let url = (JObject)jdliv["files"].FirstOrDefault()
 				 where url != null
-				 let files = new { Id = jd.info.id.ToString(), Name = $"{jd.info.cnname}({jd.info.enname})", FileName = jdliv["name"].ToString(), Size = jdliv["size"].ToString(), Resolution = resolution, Url = url["address"].ToString() }
+				 let files = new { Id = $"{jd.info.id}", Name = $"{jd.info.cnname}({jd.info.enname})", FileName = jdliv["name"].ToString(), Size = jdliv["size"].ToString(), Resolution = resolution, Url = url["address"].ToString() }
 				 //where files.Url.StartsWith("ed2k", true, CultureInfo.InvariantCulture) || files.Url.StartsWith("magnet", true, CultureInfo.InvariantCulture)
 				 orderby files.Id descending, files.Resolution ascending, files.FileName ascending
 				 select files;
@@ -53,7 +53,7 @@ using (var conn = new SQLiteConnection($"Data Source={dbPath};"))
 
 	var sum1 = $"剧集共计:{rst.Count()}".Dump();
 	var sum2 = $"下载地址共计: {clean.Count()}(仅保留ed2k及magnet) / {origin.Count()}(原始数据)".Dump();
-	//origin.Dump();
+	origin.Dump();
 
 	using (var writer = new StreamWriter(originPath, false, Encoding.UTF8))
 	using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
